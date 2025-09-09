@@ -361,32 +361,48 @@ ONBOARDING_UPDATE_SITE_ANALYSIS = "ONBOARDING_UPDATE_SITE_ANALYSIS"
 
 **Backend Sync Pattern**: Each action updates local state and optionally triggers backend synchronization.
 
-### Navigation Actions
+### Complete Reducer Cases Documentation
 
-**Step Navigation** (onboarding.ts:147-156):
+The onboarding reducer implements **17 action cases** organized into 7 categories, providing comprehensive state management with detailed documentation for each case.
 
+#### Navigation Actions (2 cases)
+
+**`ONBOARDING_NAVIGATE_TO_STEP`** - Navigate to specific onboarding step
 ```typescript
 case ONBOARDING_NAVIGATE_TO_STEP:
   return {
     ...state,
     navigation: {
       ...state.navigation,
-      currentStep: action.payload,
-      isAnimating: true, // Triggers UI transitions
+      currentStep: action.payload,      // Update current step (1-3)
+      isAnimating: true,               // Trigger transition animations
     },
-    updatedAt: now, // Timestamp for change tracking
+    updatedAt: now,                    // Track change timestamp
   }
 ```
+- **Payload**: `number` - Target step (1=Design, 2=Content, 3=Contact)
+- **State Updates**: `navigation.currentStep`, `navigation.isAnimating`
+- **Backend Integration**: Analytics event tracking, progress persistence, URL sync
 
-**Backend Integration**: Navigation changes trigger:
-1. Analytics event tracking
-2. Progress state persistence
-3. URL synchronization
+**`ONBOARDING_SET_ANIMATING`** - Control transition animation state
+```typescript
+case ONBOARDING_SET_ANIMATING:
+  return {
+    ...state,
+    navigation: {
+      ...state.navigation,
+      isAnimating: action.payload,     // Set animation active state
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `boolean` - Animation active state
+- **State Updates**: `navigation.isAnimating`
+- **Usage**: Coordinate UI animations, prevent interactions during transitions
 
-### Design Customization Actions
+#### Design Actions (6 cases)
 
-**Color Updates** (onboarding.ts:190-199):
-
+**`ONBOARDING_UPDATE_DESIGN_COLOR`** - Update primary/secondary brand colors
 ```typescript
 case ONBOARDING_UPDATE_DESIGN_COLOR:
   return {
@@ -394,21 +410,128 @@ case ONBOARDING_UPDATE_DESIGN_COLOR:
     design: {
       ...state.design,
       [action.payload.type === "primary" ? "primaryColor" : "secondaryColor"]:
-        action.payload.color,
+        action.payload.color,           // Update selected color
     },
     updatedAt: now,
   }
 ```
+- **Payload**: `{ type: "primary" | "secondary", color: string }`
+- **State Updates**: `design.primaryColor` or `design.secondaryColor`
+- **Backend Sync**: Widget customization service, user profile settings
 
-**Backend Persistence**: Design changes are saved to:
-- User profile settings
-- Site configuration database
-- Widget customization service
+**`ONBOARDING_UPDATE_FLOATIE_LOGO`** - Update Floatie header logo
+```typescript
+case ONBOARDING_UPDATE_FLOATIE_LOGO:
+  return {
+    ...state,
+    design: {
+      ...state.design,
+      floatieLogo: action.payload.filename,        // Backend filename
+      floatieLogoPreview: action.payload.preview,  // Preview URL/base64
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `{ filename: string, preview: string }`
+- **State Updates**: `design.floatieLogo`, `design.floatieLogoPreview`
+- **Features**: Dual storage for backend persistence and immediate UI preview
 
-### Content Source Actions
+**`ONBOARDING_UPDATE_LAUNCHER_LOGO`** - Update launcher button logo
+```typescript
+case ONBOARDING_UPDATE_LAUNCHER_LOGO:
+  return {
+    ...state,
+    design: {
+      ...state.design,
+      launcherLogo: action.payload.filename,        // Backend filename
+      launcherLogoPreview: action.payload.preview,  // Preview URL/base64
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `{ filename: string, preview: string }`
+- **State Updates**: `design.launcherLogo`, `design.launcherLogoPreview`
+- **Branding**: Consistent logo across launcher button and Floatie header
 
-**Site Analysis Updates** (onboarding.ts:346-358):
+**`ONBOARDING_UPDATE_FLOATIE_POSITION`** - Set Floatie screen position
+```typescript
+case ONBOARDING_UPDATE_FLOATIE_POSITION:
+  return {
+    ...state,
+    design: {
+      ...state.design,
+      floatiePosition: action.payload,  // Set position (left/right)
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `"left" | "right"` - Screen side for widget placement
+- **State Updates**: `design.floatiePosition`
+- **Impact**: Controls widget positioning on user's website
 
+**`ONBOARDING_TOGGLE_FLOATIE_OPEN`** - Toggle Floatie preview state
+```typescript
+case ONBOARDING_TOGGLE_FLOATIE_OPEN:
+  return {
+    ...state,
+    design: {
+      ...state.design,
+      floatieIsOpen: !state.design.floatieIsOpen,  // Invert current state
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: None (toggle action)
+- **State Updates**: `design.floatieIsOpen` (inverted)
+- **Usage**: Interactive preview for design step demonstration
+
+#### Domain Actions (1 case)
+
+**`ONBOARDING_UPDATE_DOMAIN`** - Set target website domain
+```typescript
+case ONBOARDING_UPDATE_DOMAIN:
+  return {
+    ...state,
+    domain: action.payload,           // Set primary domain
+    content: {
+      ...state.content,
+      siteItems: action.payload       // Create site analysis item
+        ? [
+            {
+              title: action.payload,
+              description: "Website",
+              icon: "niceprototypes.svg",
+              status: "active",
+            },
+          ]
+        : [],                        // Clear if no domain
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `string` - Website domain (e.g., "example.com")
+- **State Updates**: `domain`, `content.siteItems` (creates analysis item)
+- **Backend Triggers**: Domain validation, website analysis workflows
+
+#### Content Source Actions (3 cases)
+
+**`ONBOARDING_SET_ANALYZING`** - Control content analysis UI state
+```typescript
+case ONBOARDING_SET_ANALYZING:
+  return {
+    ...state,
+    content: {
+      ...state.content,
+      isAnalyzing: action.payload,    // Set analyzing state
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `boolean` - Analysis active state
+- **State Updates**: `content.isAnalyzing`
+- **UI Effect**: Shows/hides loading indicators during crawling
+
+**`ONBOARDING_UPDATE_SITE_ANALYSIS`** - Update website analysis status
 ```typescript
 case ONBOARDING_UPDATE_SITE_ANALYSIS:
   return {
@@ -417,25 +540,119 @@ case ONBOARDING_UPDATE_SITE_ANALYSIS:
       ...state.content,
       siteItems: state.content.siteItems.map((item) =>
         item.title === action.payload.domain 
-          ? { ...item, status: action.payload.status } 
+          ? { ...item, status: action.payload.status }  // Update matching site
           : item
       ),
-      isAnalyzing: false,
-      analysisComplete: true,
+      isAnalyzing: false,             // Stop analyzing indicator
+      analysisComplete: true,         // Mark analysis as finished
     },
     updatedAt: now,
   }
 ```
+- **Payload**: `{ domain: string, status: StatusType }`
+- **State Updates**: Site status, analysis flags
+- **Backend Response**: Website crawling completion notifications
 
-**Backend Communication**: This action responds to:
-- Website crawling completion
-- Content extraction results
-- Analysis status updates from backend services
+**`ONBOARDING_UPDATE_SOURCE_STATUS`** - Update content source integration status
+```typescript
+case ONBOARDING_UPDATE_SOURCE_STATUS:
+  return {
+    ...state,
+    content: {
+      ...state.content,
+      contentSources: state.content.contentSources.map((item) =>
+        item.title === action.payload.itemTitle
+          ? { ...item, status: action.payload.status }  // Update matching source
+          : item
+      ),
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `{ itemTitle: string, status: StatusType | undefined }`
+- **State Updates**: `content.contentSources[].status`
+- **Integration**: GitHub, Notion, etc. connection status management
 
-### Contact Method Actions
+#### Contact Method Actions (5 cases)
 
-**Time Window Configuration** (onboarding.ts:492-509):
+**`ONBOARDING_SET_ACTIVE_CONTACT_TAB`** - Set active contact method tab
+```typescript
+case ONBOARDING_SET_ACTIVE_CONTACT_TAB:
+  return {
+    ...state,
+    contact: {
+      ...state.contact,
+      activeTabIndex: action.payload,  // Set active tab (0=Chat, 1=Email, 2=Phone)
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `number` - Tab index
+- **State Updates**: `contact.activeTabIndex`
+- **Interface**: Controls contact method configuration interface
 
+**`ONBOARDING_UPDATE_CONTACT_FORM`** - Update contact method form fields
+```typescript
+case ONBOARDING_UPDATE_CONTACT_FORM:
+  const { method, field, value } = action.payload
+
+  if (method === "Email") {
+    return {
+      ...state,
+      contact: {
+        ...state.contact,
+        formData: {
+          ...state.contact.formData,
+          email: {
+            ...state.contact.formData.email,
+            [field]: value,               // Update email form field
+          },
+        },
+      },
+      updatedAt: now,
+    }
+  } else if (method === "Phone") {
+    return {
+      ...state,
+      contact: {
+        ...state.contact,
+        formData: {
+          ...state.contact.formData,
+          phone: {
+            ...state.contact.formData.phone,
+            [field]: value,               // Update phone form field
+          },
+        },
+      },
+      updatedAt: now,
+    }
+  }
+  return state                           // No change for other methods
+```
+- **Payload**: `{ method: ContactMethodType, field: string, value: string }`
+- **State Updates**: `contact.formData.email[]` or `contact.formData.phone[]`
+- **Form Fields**: Email (supportEmail, friendlyName, emailSubject, emailMessage), Phone (phoneNumber)
+
+**`ONBOARDING_UPDATE_TAB_DISABLED`** - Enable/disable contact method tabs
+```typescript
+case ONBOARDING_UPDATE_TAB_DISABLED:
+  return {
+    ...state,
+    contact: {
+      ...state.contact,
+      disabledTabs: {
+        ...state.contact.disabledTabs,
+        [action.payload.method]: action.payload.disabled,  // Set disabled state
+      },
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `{ method: ContactMethodType, disabled: boolean }`
+- **State Updates**: `contact.disabledTabs[method]`
+- **Visibility**: Disabled methods hidden from end users
+
+**`ONBOARDING_UPDATE_TIME_WINDOW`** - Update availability time windows
 ```typescript
 case ONBOARDING_UPDATE_TIME_WINDOW:
   return {
@@ -448,7 +665,7 @@ case ONBOARDING_UPDATE_TIME_WINDOW:
           ...state.contact.timeWindows[action.payload.method],
           [action.payload.day]: {
             ...state.contact.timeWindows[action.payload.method][action.payload.day],
-            [action.payload.field]: action.payload.value,
+            [action.payload.field]: action.payload.value,  // Update time field
           },
         },
       },
@@ -456,11 +673,127 @@ case ONBOARDING_UPDATE_TIME_WINDOW:
     updatedAt: now,
   }
 ```
+- **Payload**: `{ method: ContactMethodType, day: DayOfWeekType, field: "start" | "end", value: string }`
+- **State Updates**: `contact.timeWindows[method][day][field]`
+- **Granular Control**: Different schedules per contact method and day
 
-**Backend Sync**: Contact configurations are saved to:
-- Site contact settings
-- Provider integration configurations
-- Availability schedule database
+**`ONBOARDING_UPDATE_TIME_ALWAYS`** - Toggle 24/7 availability setting
+```typescript
+case ONBOARDING_UPDATE_TIME_ALWAYS:
+  return {
+    ...state,
+    contact: {
+      ...state.contact,
+      timeWindows: {
+        ...state.contact.timeWindows,
+        [action.payload.method]: {
+          ...state.contact.timeWindows[action.payload.method],
+          [action.payload.day]: {
+            ...state.contact.timeWindows[action.payload.method][action.payload.day],
+            isAlways: action.payload.isAlways,  // Set 24/7 availability flag
+          },
+        },
+      },
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `{ method: ContactMethodType, day: DayOfWeekType, isAlways: boolean }`
+- **State Updates**: `contact.timeWindows[method][day].isAlways`
+- **Override**: Supersedes specific start/end time settings when enabled
+
+#### Progress Actions (1 case)
+
+**`ONBOARDING_UPDATE_PROGRESS_STEPS`** - Update website analysis progress
+```typescript
+case ONBOARDING_UPDATE_PROGRESS_STEPS:
+  const steps = action.payload
+  const totalSteps = steps.length
+  const completedSteps = steps.filter((step) => step.status === "done").length
+  const percent = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0
+
+  return {
+    ...state,
+    progress: {
+      ...state.progress,
+      steps,                          // Update progress step array
+      percent,                        // Calculate completion percentage
+      currentProgressStep: completedSteps,  // Count of completed steps
+      isComplete: percent === 100,    // Set completion flag
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `ProgressStep[]` - Array of progress steps
+- **State Updates**: All progress fields with calculated values
+- **Real-time**: Reflects backend processing progress via polling
+
+#### UI State Actions (3 cases)
+
+**`ONBOARDING_SET_HOVERED_SOURCE`** - Track hovered content source
+```typescript
+case ONBOARDING_SET_HOVERED_SOURCE:
+  return {
+    ...state,
+    ui: {
+      ...state.ui,
+      windowSources: {
+        ...state.ui.windowSources,
+        hoveredIndex: action.payload,   // Set hovered item index
+      },
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `number | null` - Hovered item index (null when no hover)
+- **State Updates**: `ui.windowSources.hoveredIndex`
+- **Visual**: Provides hover feedback in sources list
+
+**`ONBOARDING_SET_ACTIVE_SOURCE`** - Set active/expanded content source
+```typescript
+case ONBOARDING_SET_ACTIVE_SOURCE:
+  return {
+    ...state,
+    ui: {
+      ...state.ui,
+      windowSources: {
+        ...state.ui.windowSources,
+        activeIndex: action.payload,    // Set active item index
+      },
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `number | null` - Active item index (null when none active)
+- **State Updates**: `ui.windowSources.activeIndex`
+- **Interaction**: Shows configuration form for active source
+
+**`ONBOARDING_UPDATE_SEARCH_QUERY`** - Update content source search filter
+```typescript
+case ONBOARDING_UPDATE_SEARCH_QUERY:
+  return {
+    ...state,
+    ui: {
+      ...state.ui,
+      windowSources: {
+        ...state.ui.windowSources,
+        searchQuery: action.payload,    // Update search query text
+      },
+    },
+    updatedAt: now,
+  }
+```
+- **Payload**: `string` - Search query text
+- **State Updates**: `ui.windowSources.searchQuery`
+- **Filtering**: Enables real-time source filtering in UI
+
+### Reducer Architecture Patterns
+
+**Immutability**: Every case returns a new state object using spread operators
+**Timestamp Tracking**: All cases update `updatedAt` field for debugging and change tracking
+**Pure Functions**: No side effects, same input always produces same output
+**Type Safety**: Full TypeScript coverage prevents runtime errors
+**State Isolation**: Changes only affect relevant state sections, maintaining performance
 
 ## OnboardingContext - Provider System
 
@@ -481,9 +814,43 @@ const [data, dispatch] = useReducer(onboardingReducer, initializeData(initialDat
 2. **Backend Data Fetching**: Loads user preferences and site settings
 3. **State Hydration**: Populates context with combined frontend/backend data
 
-### Action Creators
+### Complete Action Creator System
 
-**Design Actions** (Provider.tsx:107-109):
+The OnboardingProvider implements **22 action creators and utility functions** organized into 6 categories, providing comprehensive state management for the onboarding flow.
+
+#### Navigation Action Creators (2 functions)
+
+**`navigateToStep(step: number)`** - Navigate to specific onboarding step
+- **Purpose**: Updates current step and triggers transition animations
+- **Parameters**: `step` - Target step number (1-based index)
+- **State Updates**: `navigation.currentStep`, `navigation.isAnimating`
+- **Usage**: Step navigation buttons, URL routing, programmatic navigation
+
+```typescript
+const navigateToStep = useCallback((step: number) => {
+  dispatch({ type: ONBOARDING_NAVIGATE_TO_STEP, payload: step })
+}, [])
+```
+
+**`setAnimating(isAnimating: boolean)`** - Control transition animation state
+- **Purpose**: Coordinates UI animations and prevents interactions during transitions
+- **Parameters**: `isAnimating` - Whether transition animation is active
+- **State Updates**: `navigation.isAnimating`
+- **Usage**: Animation coordination, smooth step transitions
+
+```typescript
+const setAnimating = useCallback((isAnimating: boolean) => {
+  dispatch({ type: ONBOARDING_SET_ANIMATING, payload: isAnimating })
+}, [])
+```
+
+#### Design Customization Action Creators (6 functions)
+
+**`updatePrimaryBrandColor(color: string)`** - Update primary brand color
+- **Purpose**: Sets main accent color for Floatie interface
+- **Parameters**: `color` - Primary color value (hex, rgb, hsl, named)
+- **State Updates**: `design.primaryColor`
+- **Backend Sync**: Saves to widget customization service
 
 ```typescript
 const updatePrimaryBrandColor = useCallback((color: string) => {
@@ -491,12 +858,149 @@ const updatePrimaryBrandColor = useCallback((color: string) => {
 }, [])
 ```
 
-**Performance Optimization**: All action creators use `useCallback` to prevent unnecessary re-renders and maintain referential equality.
+**`updateSecondaryBrandColor(color: string)`** - Update secondary brand color
+- **Purpose**: Sets secondary accent color for supporting UI elements
+- **Parameters**: `color` - Secondary color value
+- **State Updates**: `design.secondaryColor`
+- **Usage**: Backgrounds, borders, secondary elements
 
-**Backend Integration Pattern**: Action creators trigger:
-1. Immediate local state updates via dispatch
-2. Asynchronous backend API calls
-3. Optimistic UI updates with error rollback
+**`updateFloatiePosition(position: "left" | "right")`** - Set widget position
+- **Purpose**: Controls Floatie placement on user's website
+- **Parameters**: `position` - Screen side for widget placement
+- **State Updates**: `design.floatiePosition`
+- **Impact**: Affects widget positioning when activated
+
+**`updateFloatieLogo(filename: string, preview: string)`** - Update Floatie logo
+- **Purpose**: Sets custom branding logo in Floatie header
+- **Parameters**: `filename` - Backend filename, `preview` - Preview URL/base64
+- **State Updates**: `design.floatieLogo`, `design.floatieLogoPreview`
+- **Features**: Immediate visual feedback during upload
+
+**`updateDesignLauncherLogo(filename: string, preview: string)`** - Update launcher logo
+- **Purpose**: Sets logo for launcher button that opens Floatie
+- **Parameters**: `filename` - Backend filename, `preview` - Preview data
+- **State Updates**: `design.launcherLogo`, `design.launcherLogoPreview`
+- **Branding**: Consistency across help system touchpoints
+
+**`toggleFloatieOpen()`** - Toggle Floatie preview state
+- **Purpose**: Shows live preview of Floatie behavior during design
+- **Parameters**: None (toggle action)
+- **State Updates**: `design.floatieIsOpen` (inverted)
+- **Usage**: Interactive preview for design decisions
+
+#### Domain Configuration Action Creators (1 function)
+
+**`updateDomain(domain: string)`** - Set target website domain
+- **Purpose**: Sets primary domain for Floatie installation and triggers analysis
+- **Parameters**: `domain` - Website domain (e.g., "example.com")
+- **State Updates**: `domain`, `content.siteItems` (creates analysis item)
+- **Backend Triggers**: Domain validation, site analysis workflows
+
+```typescript
+const updateDomain = useCallback((domain: string) => {
+  dispatch({ type: ONBOARDING_UPDATE_DOMAIN, payload: domain })
+}, [])
+```
+
+#### Content Source Action Creators (3 functions)
+
+**`updateSiteAnalysis(domain: string, status: FunctionalStatusType)`** - Update analysis status
+- **Purpose**: Tracks progress and results of website analysis
+- **Parameters**: `domain` - Domain being analyzed, `status` - Analysis status
+- **State Updates**: `content.siteItems[].status`, `content.isAnalyzing`, `content.analysisComplete`
+- **Backend Response**: Handles crawling completion notifications
+
+**`updateSourceStatus(itemTitle: string, status: StatusType | undefined)`** - Update integration status
+- **Purpose**: Manages connection state of external sources (GitHub, Notion, etc.)
+- **Parameters**: `itemTitle` - Source identifier, `status` - Integration status
+- **State Updates**: `content.contentSources[].status`
+- **Reflects**: Authentication success, API connectivity, data sync state
+
+**`setAnalyzing(isAnalyzing: boolean)`** - Control analysis UI state
+- **Purpose**: Manages UI state during content indexing and processing
+- **Parameters**: `isAnalyzing` - Whether analysis is active
+- **State Updates**: `content.isAnalyzing`
+- **UI Effect**: Shows/hides loading indicators, prevents concurrent operations
+
+#### Contact Method Action Creators (5 functions)
+
+**`setContactActiveTab(index: number)`** - Set active contact tab
+- **Purpose**: Controls which contact method is being configured
+- **Parameters**: `index` - Tab index (0=Chat, 1=Email, 2=Phone)
+- **State Updates**: `contact.activeTabIndex`
+- **Interface**: Switches between Chat, Email, Phone configuration
+
+**`updateContactTimeWindow(method, day, field, value)`** - Update availability schedule
+- **Purpose**: Sets specific availability hours for contact methods per day
+- **Parameters**: `method` - Contact type, `day` - Weekday, `field` - start/end, `value` - Time
+- **State Updates**: `contact.timeWindows[method][day][field]`
+- **Granular Control**: Different schedules per contact method and day
+
+**`updateContactTimeAlways(method, day, isAlways)`** - Toggle 24/7 availability
+- **Purpose**: Quick toggle for round-the-clock availability
+- **Parameters**: `method` - Contact type, `day` - Weekday, `isAlways` - 24/7 flag
+- **State Updates**: `contact.timeWindows[method][day].isAlways`
+- **Override**: Supersedes specific time window settings
+
+**`updateContactForm(method, field, value)`** - Update contact form fields
+- **Purpose**: Handles dynamic form data for contact method setup
+- **Parameters**: `method` - Contact type, `field` - Form field name, `value` - New value
+- **State Updates**: `contact.formData.email[]` or `contact.formData.phone[]`
+- **Fields**: Email (supportEmail, friendlyName, emailSubject, emailMessage), Phone (phoneNumber)
+
+**`updateContactDisabledTab(method, disabled)`** - Enable/disable contact methods
+- **Purpose**: Controls contact method availability based on business requirements
+- **Parameters**: `method` - Contact type, `disabled` - Disabled state
+- **State Updates**: `contact.disabledTabs[method]`
+- **Visibility**: Disabled methods hidden from end users
+
+#### Utility Functions (5 functions)
+
+**`getCurrentStepData()`** - Get current step metadata
+- **Returns**: Step object with title, description, icon, etc.
+- **Usage**: Components displaying step-specific information
+
+**`isFirstStep()`** - Check if on first step
+- **Returns**: `boolean` - True if on step 1
+- **Usage**: Conditionally show/hide "Previous" navigation buttons
+
+**`isLastStep()`** - Check if on final step
+- **Returns**: `boolean` - True if on last step
+- **Usage**: Change "Next" to "Finish" button, completion workflows
+
+**`canGoBack()`** - Check backward navigation availability
+- **Returns**: `boolean` - True if can navigate to previous steps
+- **Usage**: Control "Previous" button states
+
+**`canGoForward()`** - Check forward navigation availability
+- **Returns**: `boolean` - True if can navigate to next steps
+- **Usage**: Control "Next" button states
+
+**`createMobileActions(navigate)`** - Generate mobile navigation buttons
+- **Parameters**: `navigate` - React router navigate function
+- **Returns**: `NavigationActionProps[]` - Array of mobile action buttons
+- **Features**: Context-aware actions, consistent with desktop navigation
+
+### Performance Optimization Patterns
+
+**useCallback Optimization**: All action creators are wrapped with `useCallback` for optimal performance:
+
+```typescript
+const updateDomain = useCallback((domain: string) => {
+  dispatch({ type: ONBOARDING_UPDATE_DOMAIN, payload: domain })
+}, []) // Empty dependency array - dispatch is stable
+```
+
+**Benefits**:
+- **Referential Equality**: Prevents unnecessary re-renders
+- **Memory Efficiency**: Avoids function recreation on every render
+- **Selective Updates**: Only components using changed state re-render
+
+**Backend Integration Pattern**: Action creators follow a consistent pattern:
+1. **Immediate State Update**: Dispatch action for instant UI feedback
+2. **Backend API Call**: Async operation to persist changes
+3. **Progress Monitoring**: Real-time updates via polling or webhooks
+4. **Error Handling**: Rollback on failure with user notification
 
 ### Utility Functions
 
