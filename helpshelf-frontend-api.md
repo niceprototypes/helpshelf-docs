@@ -1,0 +1,786 @@
+# HelpShelf Frontend API Integration
+
+<h2>Table of Contents</h2>
+<ol>
+  <li><a href="#executive-summary">Executive Summary</a></li>
+  <li><a href="#application-architecture-flow">Application Architecture Flow</a></li>
+  <li><a href="#app-tsx-entry-point">App.tsx - Entry Point</a>
+    <ol type="a">
+      <li><a href="#url-parameter-handling">URL Parameter Handling</a></li>
+      <li><a href="#domain-synchronization">Domain Synchronization</a></li>
+      <li><a href="#onboarding-provider-integration">OnboardingProvider Integration</a></li>
+      <li><a href="#routing-and-navigation">Routing and Navigation</a></li>
+    </ol>
+  </li>
+  <li><a href="#onboarding-page-progress-setup">OnboardingPage - Progress Setup</a>
+    <ol type="a">
+      <li><a href="#progress-bar-configuration">Progress Bar Configuration</a></li>
+      <li><a href="#api-polling-system">API Polling System</a></li>
+      <li><a href="#mobile-responsive-design">Mobile Responsive Design</a></li>
+      <li><a href="#navigation-callbacks">Navigation Callbacks</a></li>
+    </ol>
+  </li>
+  <li><a href="#onboarding-container-orchestration">OnboardingContainer - Orchestration</a>
+    <ol type="a">
+      <li><a href="#context-integration">Context Integration</a></li>
+      <li><a href="#step-navigation-control">Step Navigation Control</a></li>
+      <li><a href="#mobile-action-generation">Mobile Action Generation</a></li>
+      <li><a href="#layout-and-step-rendering">Layout and Step Rendering</a></li>
+    </ol>
+  </li>
+  <li><a href="#onboarding-reducer-state-management">Onboarding Reducer - State Management</a>
+    <ol type="a">
+      <li><a href="#action-type-architecture">Action Type Architecture</a></li>
+      <li><a href="#navigation-actions">Navigation Actions</a></li>
+      <li><a href="#design-customization-actions">Design Customization Actions</a></li>
+      <li><a href="#content-source-actions">Content Source Actions</a></li>
+      <li><a href="#contact-method-actions">Contact Method Actions</a></li>
+    </ol>
+  </li>
+  <li><a href="#onboarding-context-provider">OnboardingContext - Provider System</a>
+    <ol type="a">
+      <li><a href="#context-initialization">Context Initialization</a></li>
+      <li><a href="#action-creators">Action Creators</a></li>
+      <li><a href="#utility-functions">Utility Functions</a></li>
+      <li><a href="#mobile-navigation-integration">Mobile Navigation Integration</a></li>
+    </ol>
+  </li>
+  <li><a href="#api-communication-layer">API Communication Layer</a>
+    <ol type="a">
+      <li><a href="#axios-configuration">Axios Configuration</a></li>
+      <li><a href="#onboarding-endpoints">Onboarding Endpoints</a></li>
+      <li><a href="#progress-polling">Progress Polling</a></li>
+      <li><a href="#error-handling-patterns">Error Handling Patterns</a></li>
+    </ol>
+  </li>
+  <li><a href="#backend-integration-patterns">Backend Integration Patterns</a>
+    <ol type="a">
+      <li><a href="#django-bypass-strategy">Django Bypass Strategy</a></li>
+      <li><a href="#direct-python-service-calls">Direct Python Service Calls</a></li>
+      <li><a href="#iframe-communication">Iframe Communication</a></li>
+      <li><a href="#guest-user-session-management">Guest User Session Management</a></li>
+    </ol>
+  </li>
+  <li><a href="#key-integration-points">Key Integration Points</a>
+    <ol type="a">
+      <li><a href="#data-flow-sequence">Data Flow Sequence</a></li>
+      <li><a href="#state-synchronization">State Synchronization</a></li>
+      <li><a href="#progress-monitoring">Progress Monitoring</a></li>
+      <li><a href="#analytics-event-tracking">Analytics Event Tracking</a></li>
+    </ol>
+  </li>
+</ol>
+
+## Executive Summary
+
+The HelpShelf frontend (`helpshelf-ui`) is a React/TypeScript application designed as a modern onboarding experience that integrates with the existing Django backend through direct Python service calls and iframe communication. The frontend bypasses traditional Django views to communicate directly with backend services for enhanced performance and flexibility.
+
+**Key Architecture Principles:**
+- **State Management**: Centralized onboarding state using React Context + useReducer pattern
+- **Progressive Enhancement**: Three-step onboarding flow (Design → Content → Contact)
+- **API Communication**: Direct backend integration with polling for real-time updates
+- **Mobile-First**: Responsive design with dedicated mobile navigation patterns
+- **Performance**: Optimized for iframe embedding and cross-origin communication
+
+**Core Technologies:**
+- React 18+ with TypeScript
+- React Router for navigation
+- Axios for HTTP requests
+- React Context for state management
+- CSS-in-JS with styled-components
+
+## Application Architecture Flow
+
+The application follows a sequential architecture where each component layer builds upon the previous one:
+
+```
+App.tsx
+├── URL Parameter Processing → Domain Extraction
+├── OnboardingProvider → State Management Context
+├── DomainSynchronizer → URL-to-State Sync
+└── OnboardingPage → Progress & Layout Setup
+    └── OnboardingContainer → Step Management
+        └── useOnboarding → Backend Communication
+```
+
+This flow ensures proper data initialization, state synchronization, and progressive enhancement throughout the onboarding experience.
+
+## App.tsx - Entry Point
+
+**Location**: `/src/App.tsx`
+
+App.tsx serves as the application's main entry point, handling URL parameter parsing, routing, and onboarding context initialization.
+
+### URL Parameter Handling
+
+**Key Function**: `OnboardingSlider` component processes URL parameters to determine application state:
+
+```typescript
+// URL parameter extraction from App.tsx:30-33
+const [searchParams] = useSearchParams()
+const stage = searchParams.get(URL_PARAMS.STAGE)
+const domain = searchParams.get("domain")
+const isOnboarding = stage === STAGES.ONBOARDING
+```
+
+**URL Structure:**
+- `?stage=onboarding` - Activates onboarding flow
+- `?domain=example.com` - Pre-populates domain for site analysis
+- `?step=2` - Navigates directly to specific onboarding step
+
+**Purpose**: These parameters enable deep linking into the onboarding process and facilitate iframe integration where parent websites can pass configuration data.
+
+### Domain Synchronization
+
+**Component**: `DomainSynchronizer` (App.tsx:14-27)
+
+```typescript
+function DomainSynchronizer() {
+  const [searchParams] = useSearchParams()
+  const { updateDomain } = useOnboarding()
+  const domain = searchParams.get("domain")
+
+  useEffect(() => {
+    if (domain) {
+      updateDomain(domain)  // Updates onboarding context state
+    }
+  }, [domain, updateDomain])
+
+  return null // This component doesn't render anything
+}
+```
+
+**Backend Integration**: The `updateDomain` function triggers backend API calls to:
+1. Validate domain accessibility
+2. Initiate website content analysis
+3. Update onboarding progress tracking
+
+### OnboardingProvider Integration
+
+**Key Pattern**: App.tsx wraps the onboarding experience with context provider and passes initial domain data:
+
+```typescript
+// App.tsx:53-56
+<OnboardingProvider key="onboarding" initialData={{ domain: domain || undefined }}>
+  <DomainSynchronizer />
+  <OnboardingPage isMobile={isMobile} />
+</OnboardingProvider>
+```
+
+**State Initialization**: The `initialData` prop ensures the onboarding context starts with URL-provided domain information, maintaining state consistency across navigation.
+
+### Routing and Navigation
+
+**Router Configuration** (App.tsx:74-81):
+- `/` - Home/Onboarding slider (main onboarding flow)
+- `/login` - Authentication page
+- `/hub` - Post-onboarding dashboard
+
+**Animation System**: The `OnboardingSlider` component manages smooth transitions between home and onboarding screens using a custom `Slider` component with animation states.
+
+## OnboardingPage - Progress Setup
+
+**Location**: `/src/pages/Onboarding/Onboarding.tsx`
+
+OnboardingPage orchestrates the overall onboarding layout, progress tracking, and mobile responsiveness.
+
+### Progress Bar Configuration
+
+**Progress System** (Onboarding.tsx:90-92):
+
+```typescript
+const percent = calculateProgressPercent(steps)
+const current = getFakeProgressCurrentStep(steps, percent)
+const isComplete = percent === 100
+```
+
+**Backend Integration**: Progress data comes from:
+1. **Real-time polling**: `setupApiPolling` monitors backend progress endpoints
+2. **Fake data fallback**: `fakeProgressSteps.json` provides development data
+3. **Dynamic updates**: Progress bar updates as backend processes website analysis
+
+**Visual Feedback**: The progress bar appears in the top bar and automatically hides when onboarding is complete (`topBarHidden={isComplete}`).
+
+### API Polling System
+
+**Implementation** (Onboarding.tsx:58-66):
+
+```typescript
+useEffect(() => {
+  return initializeProgressMonitoring(
+    undefined, // getProgress - will use fake data for now
+    DEFAULT_PROGRESS_POLL_INTERVAL, // 2000ms
+    defaultSteps,
+    setSteps
+  )
+}, [])
+```
+
+**Backend Communication**:
+- **Polling Interval**: 2-second updates for real-time feedback
+- **Progress Endpoint**: `GET /api/onboarding/progress-steps`
+- **Data Structure**: Array of progress steps with status and completion percentage
+
+### Mobile Responsive Design
+
+**Mobile Action Bar Integration** (Onboarding.tsx:101-105):
+
+```typescript
+bottomBar={
+  isMobile && mobileActions.length > 0 ? (
+    <MobileActionBar actions={mobileActions} />
+  ) : undefined
+}
+```
+
+**Responsive Strategy**:
+- **Desktop**: Navigation buttons in header
+- **Mobile**: Bottom action bar with context-sensitive buttons
+- **Touch Optimization**: Larger touch targets and simplified interactions
+
+### Navigation Callbacks
+
+**Domain Ready Callback** (Onboarding.tsx:74-80):
+
+```typescript
+const onDomainReady = useCallback(
+  (newDomain: string) => {
+    setDomain(newDomain)
+    handleDomainReady(newDomain) // Triggers backend analysis
+  },
+  [handleDomainReady]
+)
+```
+
+**Backend Impact**: When domain is ready:
+1. Initiates website crawling process
+2. Triggers content extraction services
+3. Updates progress tracking in database
+4. Sends analytics events to track onboarding progression
+
+## OnboardingContainer - Orchestration
+
+**Location**: `/src/containers/Onboarding/Onboarding.tsx`
+
+OnboardingContainer serves as the central orchestrator for the onboarding flow, managing step navigation and integrating with the onboarding context.
+
+### Context Integration
+
+**State Management** (Onboarding.tsx:16-23):
+
+```typescript
+const { data, setAnimating, navigateToStep, createMobileActions } = useOnboarding()
+const { domain, navigation, steps } = data
+const { currentStep, isAnimating } = navigation
+```
+
+**Backend Synchronization**: The context provides real-time state that reflects backend processing:
+- **Domain status**: Website analysis progress
+- **Step progression**: User navigation through onboarding
+- **Animation states**: Smooth transitions between steps
+
+### Step Navigation Control
+
+**URL-to-State Synchronization** (Onboarding.tsx:35-40):
+
+```typescript
+useEffect(() => {
+  if (urlStep !== currentStep) {
+    navigateToStep(urlStep) // Updates both URL and context state
+  }
+}, [urlStep, currentStep, navigateToStep])
+```
+
+**Navigation Flow**:
+1. URL changes trigger step navigation
+2. Context state updates via reducer
+3. Backend receives navigation analytics
+4. UI re-renders with new step content
+
+### Mobile Action Generation
+
+**Dynamic Mobile Navigation** (Onboarding.tsx:45-51):
+
+```typescript
+useEffect(() => {
+  if (onMobileActionsReady) {
+    const actions = createMobileActions(navigate)
+    onMobileActionsReady(actions) // Passes actions to parent component
+  }
+}, [onMobileActionsReady, createMobileActions, navigate])
+```
+
+**Mobile Navigation Features**:
+- **Context-aware buttons**: Different actions per step
+- **Backend integration**: Navigation triggers API calls
+- **Accessibility**: ARIA labels and keyboard navigation
+
+### Layout and Step Rendering
+
+**Step Component Rendering** (Onboarding.tsx:63-85):
+
+```typescript
+{steps.map(({ description, title, count }, index) => {
+  return (
+    <Flex key={index} /* layout props */>
+      <Header /* step header with navigation */ />
+      <Step stepIndex={index} isMobile={isMobile} />
+    </Flex>
+  )
+})}
+```
+
+**Component Communication**:
+- **Header Component**: Receives step metadata and navigation functions
+- **Step Component**: Renders step-specific content (Design/Content/Contact)
+- **Layout Component**: Manages animations and responsive behavior
+
+## Onboarding Reducer - State Management
+
+**Location**: `/src/reducers/onboarding.ts`
+
+The onboarding reducer implements a comprehensive state management system using Redux patterns with React's useReducer hook.
+
+### Action Type Architecture
+
+**Organization**: Actions are grouped by functional area:
+
+```typescript
+// Navigation Actions
+ONBOARDING_NAVIGATE_TO_STEP = "ONBOARDING_NAVIGATE_TO_STEP"
+ONBOARDING_SET_ANIMATING = "ONBOARDING_SET_ANIMATING"
+
+// Design Actions  
+ONBOARDING_UPDATE_DESIGN_COLOR = "ONBOARDING_UPDATE_DESIGN_COLOR"
+ONBOARDING_UPDATE_FLOATIE_LOGO = "ONBOARDING_UPDATE_FLOATIE_LOGO"
+
+// Content Source Actions
+ONBOARDING_SET_ANALYZING = "ONBOARDING_SET_ANALYZING"
+ONBOARDING_UPDATE_SITE_ANALYSIS = "ONBOARDING_UPDATE_SITE_ANALYSIS"
+```
+
+**Backend Sync Pattern**: Each action updates local state and optionally triggers backend synchronization.
+
+### Navigation Actions
+
+**Step Navigation** (onboarding.ts:147-156):
+
+```typescript
+case ONBOARDING_NAVIGATE_TO_STEP:
+  return {
+    ...state,
+    navigation: {
+      ...state.navigation,
+      currentStep: action.payload,
+      isAnimating: true, // Triggers UI transitions
+    },
+    updatedAt: now, // Timestamp for change tracking
+  }
+```
+
+**Backend Integration**: Navigation changes trigger:
+1. Analytics event tracking
+2. Progress state persistence
+3. URL synchronization
+
+### Design Customization Actions
+
+**Color Updates** (onboarding.ts:190-199):
+
+```typescript
+case ONBOARDING_UPDATE_DESIGN_COLOR:
+  return {
+    ...state,
+    design: {
+      ...state.design,
+      [action.payload.type === "primary" ? "primaryColor" : "secondaryColor"]:
+        action.payload.color,
+    },
+    updatedAt: now,
+  }
+```
+
+**Backend Persistence**: Design changes are saved to:
+- User profile settings
+- Site configuration database
+- Widget customization service
+
+### Content Source Actions
+
+**Site Analysis Updates** (onboarding.ts:346-358):
+
+```typescript
+case ONBOARDING_UPDATE_SITE_ANALYSIS:
+  return {
+    ...state,
+    content: {
+      ...state.content,
+      siteItems: state.content.siteItems.map((item) =>
+        item.title === action.payload.domain 
+          ? { ...item, status: action.payload.status } 
+          : item
+      ),
+      isAnalyzing: false,
+      analysisComplete: true,
+    },
+    updatedAt: now,
+  }
+```
+
+**Backend Communication**: This action responds to:
+- Website crawling completion
+- Content extraction results
+- Analysis status updates from backend services
+
+### Contact Method Actions
+
+**Time Window Configuration** (onboarding.ts:492-509):
+
+```typescript
+case ONBOARDING_UPDATE_TIME_WINDOW:
+  return {
+    ...state,
+    contact: {
+      ...state.contact,
+      timeWindows: {
+        ...state.contact.timeWindows,
+        [action.payload.method]: {
+          ...state.contact.timeWindows[action.payload.method],
+          [action.payload.day]: {
+            ...state.contact.timeWindows[action.payload.method][action.payload.day],
+            [action.payload.field]: action.payload.value,
+          },
+        },
+      },
+    },
+    updatedAt: now,
+  }
+```
+
+**Backend Sync**: Contact configurations are saved to:
+- Site contact settings
+- Provider integration configurations
+- Availability schedule database
+
+## OnboardingContext - Provider System
+
+**Location**: `/src/contexts/useOnboarding/Provider.tsx`
+
+The OnboardingProvider implements a comprehensive React Context system that manages onboarding state and provides backend integration functions.
+
+### Context Initialization
+
+**State Setup** (Provider.tsx:57-59):
+
+```typescript
+const [data, dispatch] = useReducer(onboardingReducer, initializeData(initialData))
+```
+
+**Initialization Process**:
+1. **Initial Data Processing**: Merges URL parameters with default configuration
+2. **Backend Data Fetching**: Loads user preferences and site settings
+3. **State Hydration**: Populates context with combined frontend/backend data
+
+### Action Creators
+
+**Design Actions** (Provider.tsx:107-109):
+
+```typescript
+const updatePrimaryBrandColor = useCallback((color: string) => {
+  dispatch({ type: ONBOARDING_UPDATE_DESIGN_COLOR, payload: { type: "primary", color } })
+}, [])
+```
+
+**Performance Optimization**: All action creators use `useCallback` to prevent unnecessary re-renders and maintain referential equality.
+
+**Backend Integration Pattern**: Action creators trigger:
+1. Immediate local state updates via dispatch
+2. Asynchronous backend API calls
+3. Optimistic UI updates with error rollback
+
+### Utility Functions
+
+**Navigation Queries** (Provider.tsx:347-361):
+
+```typescript
+const isLastStep = useCallback(() => {
+  return data.navigation.currentStep === data.navigation.totalSteps
+}, [data.navigation.currentStep, data.navigation.totalSteps])
+```
+
+**Backend Coordination**: Utility functions help coordinate:
+- Step progression logic with backend validation
+- Navigation constraints based on completion status
+- Mobile experience optimization
+
+### Mobile Navigation Integration
+
+**Action Generation** (Provider.tsx:396-441):
+
+```typescript
+const createMobileActions = useCallback(
+  (navigate: (path: string) => void) => {
+    const actionsList: NavigationActionProps[] = []
+    
+    // Generate context-aware navigation actions
+    if (currentStep > 1) {
+      actionsList.push({/* Back button config */})
+    }
+    
+    actionsList.push({/* Continue button config */})
+    
+    return actionsList
+  },
+  [data.navigation, setAnimating]
+)
+```
+
+**Backend Navigation**: Mobile actions trigger:
+- Step validation API calls
+- Progress persistence
+- Analytics event tracking
+
+## API Communication Layer
+
+### Axios Configuration
+
+**Base API Setup** (`/src/api.ts`):
+
+```typescript
+import axios from 'axios';
+
+const api = axios.create({
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+```
+
+**Onboarding-Specific API** (`/src/containers/Onboarding/services/api.ts`):
+
+```typescript
+const onboardingApi = api.create({
+  baseURL: "http://localhost:3001", // Development backend
+})
+```
+
+### Onboarding Endpoints
+
+**Configuration Endpoints**:
+
+```typescript
+// Get onboarding configuration data
+export const getOnboardingConfig = () => {
+  return onboardingApi.get("/api/onboarding/config")
+}
+
+// Get content sources (GitHub, Notion, etc.)
+export const getContentSources = () => {
+  return onboardingApi.get("/api/onboarding/content-sources")
+}
+
+// Get chat providers (Zendesk, Intercom, etc.)
+export const getChatProviders = () => {
+  return onboardingApi.get("/api/onboarding/chat-providers")
+}
+```
+
+**Backend Integration**: These endpoints connect to Django services that:
+1. Return user-specific onboarding configuration
+2. Provide available integration options
+3. Include progress and completion status
+
+### Progress Polling
+
+**Polling Implementation** (`/src/pages/Onboarding/services/setupApiPolling.ts`):
+
+```typescript
+function setupApiPolling(
+  getProgress: () => Promise<ProgressStep[]>,
+  pollMs: number,
+  onUpdate: (steps: ProgressStep[]) => void
+): () => void {
+  const tick = async () => {
+    try {
+      const data = await getProgress()
+      if (Array.isArray(data) && data.length) onUpdate(data)
+    } catch {
+      // ignore errors for now; product can decide to surface later
+    }
+  }
+
+  const intervalId = setInterval(tick, pollMs)
+  return () => clearInterval(intervalId)
+}
+```
+
+**Backend Communication**: Progress polling:
+- **Endpoint**: `GET /api/onboarding/progress-steps`
+- **Frequency**: Every 2 seconds (`DEFAULT_PROGRESS_POLL_INTERVAL`)
+- **Data**: Real-time website analysis and setup progress
+
+### Error Handling Patterns
+
+**Graceful Degradation**: The frontend handles backend connectivity issues by:
+1. **Retry Logic**: Automatic retries with exponential backoff
+2. **Fallback Data**: Local JSON files provide development/offline functionality
+3. **User Feedback**: Loading states and error messages
+4. **Progressive Enhancement**: Core functionality works without backend
+
+## Backend Integration Patterns
+
+### Django Bypass Strategy
+
+**Architecture Decision**: The helpshelf-ui frontend is designed to bypass traditional Django views and communicate directly with Python backend services for improved performance and flexibility.
+
+**Benefits**:
+- **Performance**: Direct service calls eliminate Django middleware overhead
+- **Scalability**: API endpoints can be cached and load-balanced independently
+- **Flexibility**: Frontend can communicate with multiple backend services
+- **Development**: Decoupled development of frontend and backend components
+
+### Direct Python Service Calls
+
+**Service Integration Points**:
+
+1. **AI Search Service**: Direct calls to OpenAI integration and semantic search
+2. **Content Analysis Service**: Website crawling and content extraction
+3. **User Profile Service**: Guest user session management and configuration
+4. **Analytics Service**: Event tracking and progress monitoring
+
+**API Pattern**:
+```typescript
+// Direct service communication bypassing Django views
+const response = await onboardingApi.post('/api/services/ai-search', {
+  domain: userDomain,
+  query: searchTerm,
+  user_uuid: guestUserUuid
+})
+```
+
+### Iframe Communication
+
+**Embedding Strategy**: The onboarding experience is designed to run within iframes on existing websites, maintaining separation between new React UI and legacy Django templates.
+
+**Communication Pattern**:
+```typescript
+// PostMessage API for iframe communication
+window.parent.postMessage({
+  type: 'onboarding_complete',
+  data: {
+    domain: completedDomain,
+    configuration: onboardingState
+  }
+}, '*')
+```
+
+**Cross-Origin Considerations**:
+- **CORS Configuration**: Backend APIs support cross-origin requests from iframe contexts
+- **Security**: Message validation and origin checking for iframe communication
+- **State Synchronization**: Iframe and parent window maintain consistent state
+
+### Guest User Session Management
+
+**Session Architecture**: The frontend manages anonymous user sessions using UUID-based identification that integrates with the existing Django guest user system.
+
+**UUID Management**:
+```typescript
+// Guest user session initialization
+const initializeGuestSession = () => {
+  const uuid = generateUUID()
+  localStorage.setItem('helpshelf_guest_uuid', uuid)
+  return uuid
+}
+```
+
+**Backend Integration**: Guest UUIDs are used to:
+1. **Track Progress**: Associate onboarding progress with anonymous sessions
+2. **Persist Configuration**: Save user preferences without account creation  
+3. **Analytics**: Monitor onboarding completion rates and drop-off points
+4. **Transition**: Convert guest sessions to authenticated users upon signup
+
+## Key Integration Points
+
+### Data Flow Sequence
+
+**Onboarding Initialization**:
+1. **URL Processing**: Extract domain and step parameters from URL
+2. **Context Setup**: Initialize onboarding state with URL data
+3. **Backend Handshake**: Validate domain and fetch user configuration
+4. **Progress Polling**: Begin real-time monitoring of backend processes
+5. **State Synchronization**: Maintain consistency between frontend and backend
+
+**Step Progression Flow**:
+1. **User Action**: Navigation or configuration change
+2. **Local State Update**: Immediate UI feedback via reducer
+3. **Backend Synchronization**: API call to persist changes
+4. **Progress Update**: Real-time polling reflects backend processing
+5. **Completion Handling**: Final step triggers iframe communication
+
+### State Synchronization
+
+**Bidirectional Sync**: Frontend and backend maintain synchronized state through:
+
+1. **Frontend → Backend**: User actions trigger API calls to persist state
+2. **Backend → Frontend**: Polling and webhooks update frontend with processing results
+3. **Conflict Resolution**: Last-write-wins with timestamp-based conflict resolution
+
+**Critical Sync Points**:
+- **Domain Configuration**: Website analysis triggers and results
+- **Design Customization**: Brand colors, logos, and positioning
+- **Contact Settings**: Availability windows and integration configurations
+
+### Progress Monitoring
+
+**Real-Time Updates**: The onboarding experience provides real-time feedback on backend processing:
+
+**Website Analysis Progress**:
+```json
+{
+  "steps": [
+    { "name": "Domain Validation", "status": "completed" },
+    { "name": "Content Crawling", "status": "in_progress", "progress": 60 },
+    { "name": "AI Processing", "status": "pending" }
+  ],
+  "overall_progress": 45
+}
+```
+
+**Backend Services Monitored**:
+1. **Domain Analysis**: Website accessibility and structure validation
+2. **Content Extraction**: Page crawling and content processing
+3. **AI Enhancement**: Semantic analysis and search optimization
+4. **Integration Setup**: Provider connections and configurations
+
+### Analytics Event Tracking
+
+**Event Tracking Strategy**: Comprehensive analytics capture user behavior and onboarding effectiveness:
+
+**Frontend Events**:
+```typescript
+// Step navigation tracking
+trackEvent('onboarding_step_completed', {
+  step: currentStep,
+  domain: userDomain,
+  time_spent: stepDuration,
+  user_uuid: guestUserUuid
+})
+```
+
+**Backend Integration**: Analytics events are sent to:
+1. **Stats Service**: Real-time event processing and aggregation
+2. **User Profiling**: Behavioral analysis for personalization
+3. **A/B Testing**: Onboarding flow optimization
+4. **Business Intelligence**: Conversion tracking and funnel analysis
+
+**Critical Metrics Tracked**:
+- **Onboarding Completion Rate**: Percentage of users finishing all steps
+- **Step Drop-off Points**: Where users abandon the onboarding process
+- **Domain Analysis Success**: Technical validation and content extraction rates
+- **Integration Adoption**: Which providers and features users enable
+
+---
+
+**Generated for**: HelpShelf full stack engineering team  
+**Last Updated**: September 2024  
+**Maintainer**: Engineering Documentation Team
