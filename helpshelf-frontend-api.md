@@ -1,4 +1,8 @@
-# HelpShelf Frontend API Integration
+# HelpShelf Frontend API
+
+## Repositories
+
+**Core**<br/>[https://github.com/niceprototypes/helpshelf-ui](https://github.com/niceprototypes/helpshelf-ui)
 
 <h2>Table of Contents</h2>
 <ol>

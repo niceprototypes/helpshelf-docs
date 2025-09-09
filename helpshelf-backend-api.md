@@ -1,4 +1,10 @@
-# HelpShelf Backend Analysis
+# HelpShelf Backend API
+
+## Repositories
+
+**Core**<br/>[https://bitbucket.org/helpshelf/helpshelf/src/master/](https://bitbucket.org/helpshelf/helpshelf/src/master/)  
+
+**Site crawler**<br/>[https://bitbucket.org/helpshelf/crawler/src/main/](https://bitbucket.org/helpshelf/crawler/src/main/)
 
 <h2>Table of Contents</h2>
 <ol>
