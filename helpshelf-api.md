@@ -1,8 +1,27 @@
-# HelpShelf Backend Analysis - Optimized
+# HelpShelf Backend Analysis
 
 <h2>Table of Contents</h2>
 <ol>
   <li><a href="#executive-summary">Executive Summary</a></li>
+
+  <li><a href="#database-schema--data-models">Database Schema &amp; Data Models</a>
+    <ol type="1">
+      <li><a href="#database-architecture">Database Architecture</a></li>
+      <li><a href="#core-entity-relationships">Core Entity Relationships</a></li>
+      <li><a href="#user-management--authentication">User Management &amp; Authentication</a></li>
+      <li><a href="#multi-tenant-core">Multi-Tenant Core</a></li>
+      <li><a href="#content-management-system">Content Management System</a></li>
+      <li><a href="#search--ai-system">Search &amp; AI System</a></li>
+      <li><a href="#user-interaction--analytics">User Interaction &amp; Analytics</a></li>
+      <li><a href="#communication-system">Communication System</a></li>
+      <li><a href="#billing--commerce-system">Billing &amp; Commerce System</a></li>
+      <li><a href="#affiliate--revenue-tracking">Affiliate &amp; Revenue Tracking</a></li>
+      <li><a href="#content-crawling-system">Content Crawling System</a></li>
+      <li><a href="#guest-user-system">Guest User System</a></li>
+      <li><a href="#performance-optimizations-db">Performance Optimizations</a></li>
+      <li><a href="#security--compliance">Security &amp; Compliance</a></li>
+    </ol>
+  </li>
 
   <li><a href="#system-architecture">System Architecture</a>
     <ol type="1">
@@ -99,6 +118,203 @@ HelpShelf is a multi-tenant SaaS platform providing AI-powered customer support 
 - Public AI search API endpoints (`/api/embed/ai-searchbox/search/`)
 - Real-time event tracking and analytics
 - Widget embedding with cross-origin support
+
+## Database Schema & Data Models
+
+### Overview
+
+This section provides a comprehensive overview of the HelpShelf data schema, detailing all database models, their relationships, and data structures used throughout the platform.
+
+### Database Architecture
+
+- **Database Engine**: PostgreSQL 13+
+- **ORM**: Django ORM
+- **Key Features**:
+    - JSONB fields for flexible data storage
+    - Full-text search with GIN indexes
+    - Materialized views for analytics
+    - UUID fields for external references
+    - Time-series data for events and analytics
+
+### Core Entity Relationships
+
+```
+Users (Django Auth)
+├── UserProfile (1:1)
+├── TeamMember (1:N as owner)
+├── Site (1:N as owner)
+└── Affiliate (1:1)
+
+Site (Multi-tenant Core)
+├── SiteProvider (1:N) → Provider (N:1)
+├── Content (1:N)
+├── Collection (1:N)
+├── Category (1:N)
+├── Announcement (1:N)
+├── Page (1:N)
+├── SiteUser (1:N)
+├── SearchTerm (1:N)
+├── Event (1:N)
+└── SiteError (1:N)
+
+Content Management
+├── Content → Category (N:1)
+├── Content → Collection (N:1)
+├── Content → Tags (N:N)
+├── PageContent (M2M: Page ↔ Content)
+└── ContentChunk (1:N from Content)
+
+Billing & Commerce
+├── PurchaseOrder → PurchaseOrderItem (1:N)
+├── PurchaseOrderItem → Offer (N:1)
+├── Offer → OfferItem (1:N)
+├── UserProfile → DealCode (N:1)
+└── Affiliate → AffiliateReferral (1:N)
+```
+
+### User Management & Authentication
+
+#### UserProfile
+**Purpose**: Extended user information, subscription details, and plan quotas.
+
+**Key Fields**:
+```python
+user = AutoOneToOneField(User)                    # 1:1 with Django User
+plan_name_cached = CharField(max_length=50)       # Current subscription plan
+plan_status_cached = CharField(max_length=50)     # active, trialing, canceled
+plan_quota_sites = IntegerField()                 # Site limit
+plan_quota_mtu = IntegerField()                   # Monthly tracked users limit
+plan_quota_integrations = IntegerField()          # Integration limit
+plan_feature_analytics = BooleanField()           # Analytics feature enabled
+plan_feature_no_branding = BooleanField()         # White-label feature
+is_actively_paying_mrr = BooleanField()          # Contributing to MRR
+activation_date = DateField()                     # When user became active
+```
+
+**Business Logic**:
+- Automatic plan synchronization with Stripe webhooks
+- Quota enforcement across the platform
+- Activation tracking based on content interactions
+- Marketing attribution tracking (UTM parameters)
+
+### Multi-Tenant Core
+
+#### Site
+**Purpose**: Core multi-tenant entity representing a customer's help center.
+
+**Key Fields**:
+```python
+owner = ForeignKey(User)                         # Site owner
+title = CharField(max_length=150)                # Site display name
+slug = SlugField(unique=True)                    # URL identifier
+site_url = URLField()                            # Customer's main website
+is_active = BooleanField()                       # Site enabled status
+primary_colour = CharField(max_length=50)        # Brand color
+widget_position = PositiveSmallIntegerField()    # Widget placement
+is_ai_chat_active = BooleanField()               # AI features enabled
+domain_security_active = BooleanField()          # Domain restriction
+custom_email_address = EmailField()              # Custom sender email
+timezone = TimeZoneField()                       # Site timezone
+language = PositiveSmallIntegerField()           # Display language
+```
+
+**Computed Properties**:
+- `site_public_url`: Public help center URL
+- `site_email_address`: Sender email for notifications
+- `helpshelf_url`: Widget embed URL
+
+**Business Logic**:
+- Automatic S3 synchronization for widget files
+- Email automation time calculations
+- Custom domain (CNAME) support
+- Branding and customization options
+
+### Content Management System
+
+#### Content
+**Purpose**: Core content entity for articles, FAQs, videos, and other help materials.
+
+**Key Fields**:
+```python
+site = ForeignKey(Site)                          # Multi-tenant isolation
+site_provider = ForeignKey(SiteProvider)         # Content source
+collection = ForeignKey(Collection)              # Grouping mechanism
+category = ForeignKey(Category)                  # Hierarchical categorization
+title = CharField(max_length=300)                # Content title
+slug = SlugField(max_length=300)                 # URL identifier
+body = TextField()                               # Original content
+body_custom = HTMLField()                        # Edited content
+url = URLField(max_length=500)                   # External URL
+content_type = PositiveSmallIntegerField()       # Content type enum
+popularity_score = IntegerField()                # Engagement metric
+is_published_in_widget = BooleanField()          # Visibility control
+tags = TaggableManager()                         # Flexible tagging
+search_document = SearchVectorField()            # Full-text search
+```
+
+**Content Types**:
+- `ARTICLE` (0): Help articles
+- `VIDEO` (1): Video tutorials
+- `BLOG_POST` (5): Blog content
+- `FAQ` (6): FAQ items
+- `ROADMAP_ITEM` (7): Feature requests
+- `DOCUMENTS` (8): File attachments
+- `HELPSHELF_CRAWLER` (9): Auto-crawled content
+
+**Search & AI Features**:
+- PostgreSQL full-text search with GIN indexes
+- OpenAI embedding generation for semantic search
+- Popularity scoring based on clicks and views
+- Automatic content recommendations
+
+### Search & AI System
+
+#### SearchTerm
+**Purpose**: Tracks user searches and AI response quality.
+
+**Key Fields**:
+```python
+site = ForeignKey(Site)                          # Multi-tenant isolation
+term = CharField(max_length=250)                 # Search query
+results = PositiveSmallIntegerField()            # Number of results
+user_id = CharField(max_length=100)              # Anonymous user ID
+feedback = CharField(max_length=20)              # UPVOTE/DOWNVOTE/NO_ACTION
+ai_response = TextField()                        # Generated AI response
+prompt_version_id = UUIDField()                  # Prompt version tracking
+```
+
+**Analytics**: Enables search analytics, AI response quality monitoring, and content gap identification.
+
+### Performance Optimizations
+
+#### Database Indexes
+- **GIN indexes**: Full-text search fields
+- **B-tree indexes**: Foreign keys and frequently queried fields
+- **Partial indexes**: Active/published content only
+- **Composite indexes**: Multi-column queries
+
+#### Query Optimization
+```python
+# Efficient content queries with related data
+Content.objects.select_related(
+    'site', 'site_provider__provider', 'category'
+).prefetch_related('tags')
+
+# Bulk operations for analytics
+Event.objects.bulk_create(events, batch_size=1000)
+```
+
+### Security & Compliance
+
+#### Data Protection
+- **Encryption**: Sensitive fields encrypted at application level
+- **GDPR Compliance**: User consent tracking and data portability
+- **Access Logging**: Comprehensive audit trails
+
+#### Query Security
+- **ORM Protection**: SQL injection prevention
+- **Permission Checking**: Row-level security through site ownership
+- **Rate Limiting**: API endpoint protection
 
 ## System Architecture
 
