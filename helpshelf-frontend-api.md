@@ -1274,21 +1274,3 @@ trackEvent('onboarding_step_completed', {
   user_uuid: guestUserUuid
 })
 ```
-
-**Backend Integration**: Analytics events are sent to:
-1. **Stats Service**: Real-time event processing and aggregation
-2. **User Profiling**: Behavioral analysis for personalization
-3. **A/B Testing**: Onboarding flow optimization
-4. **Business Intelligence**: Conversion tracking and funnel analysis
-
-**Critical Metrics Tracked**:
-- **Onboarding Completion Rate**: Percentage of users finishing all steps
-- **Step Drop-off Points**: Where users abandon the onboarding process
-- **Domain Analysis Success**: Technical validation and content extraction rates
-- **Integration Adoption**: Which providers and features users enable
-
----
-
-**Generated for**: HelpShelf full stack engineering team  
-**Last Updated**: September 2024  
-**Maintainer**: Engineering Documentation Team

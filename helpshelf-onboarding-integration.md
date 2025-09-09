@@ -1588,9 +1588,3 @@ class OnboardingMonitoring:
 - **Server Load**: < 10% increase in average CPU usage
 - **Memory Usage**: < 15% increase in memory consumption
 - **Cache Hit Rate**: > 90% for onboarding data
-
----
-
-**Generated for**: HelpShelf engineering team  
-**Last Updated**: September 2024  
-**Maintainer**: Backend Integration Team
