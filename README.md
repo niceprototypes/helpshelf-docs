@@ -1,10 +1,10 @@
-# HelpShelf Backend API Documentation
+# HelpShelf Platform Documentation
 
-A comprehensive technical analysis of the HelpShelf Django backend for full stack engineers integrating the new React/TypeScript frontend (`helpshelf-ui`).
+Complete technical documentation for HelpShelf's full-stack platform, covering both Django backend services and React/TypeScript frontend architecture for engineering team integration.
 
 ## 📋 Overview
 
-This repository contains detailed documentation of HelpShelf's multi-tenant SaaS platform backend, focusing on API endpoints, data models, and integration patterns needed for the `helpshelf-ui` React frontend development.
+This repository contains comprehensive documentation for HelpShelf's multi-tenant SaaS platform, including backend APIs, frontend architecture, and integration patterns between the Django backend and React/TypeScript frontend (`helpshelf-ui`).
 
 ## 🎯 Purpose
 
@@ -13,13 +13,13 @@ This repository contains detailed documentation of HelpShelf's multi-tenant SaaS
 
 ## 📖 Documentation Contents
 
-### [📄 Full Documentation](./helpshelf-api.md)
+### [📄 Backend API Documentation](./helpshelf-backend-api.md)
 
-The complete analysis covers:
+**Django/Python Backend Analysis** - Comprehensive backend system documentation:
 
 1. **Executive Summary** - Platform overview and key integration points
-2. **System Architecture** - Multi-tenant foundation, technology stack, data flows
-3. **Core Data Models** - User/site management, content & AI system models
+2. **Database Schema & Data Models** - PostgreSQL models and relationships
+3. **System Architecture** - Multi-tenant foundation, technology stack, data flows
 4. **API Endpoints** - Guest user management, AI search, content access, analytics
 5. **Django Apps Overview** - 5 core apps (Manage, Billing, Crawler, Stats, LLM Core)
 6. **Core Services** - AI embedding, payment processing, content extraction, analytics
@@ -28,6 +28,21 @@ The complete analysis covers:
 9. **Security & Performance** - Tenant isolation, rate limiting, caching strategies
 10. **Integration Architecture** - Widget embedding, iframe communication, direct API access
 11. **Development Considerations** - Code organization, testing, deployment
+
+### [📄 Frontend Integration Documentation](./helpshelf-frontend-api.md)
+
+**React/TypeScript Frontend Architecture** - Complete frontend integration guide:
+
+1. **Executive Summary** - React/TS architecture and backend integration approach
+2. **Application Architecture Flow** - Sequential component communication patterns
+3. **App.tsx - Entry Point** - URL parameters, routing, and context initialization
+4. **OnboardingPage - Progress Setup** - Progress bar, polling, and mobile responsive design
+5. **OnboardingContainer - Orchestration** - Context integration and step navigation
+6. **Onboarding Reducer - State Management** - 17 action types and state transitions
+7. **OnboardingContext - Provider System** - React Context with backend integration
+8. **API Communication Layer** - Axios configuration, endpoints, and polling patterns
+9. **Backend Integration Patterns** - Django bypass strategy and direct service calls
+10. **Key Integration Points** - Data flow sequences and real-time synchronization
 
 ## 🔗 Key Integration Points for helpshelf-ui
 
@@ -59,10 +74,19 @@ Widget Embed → Guest UUID → API Endpoints → AI Processing → Response + A
 
 ## 🔧 Technology Stack
 
-- **Backend**: Django + PostgreSQL with full-text search (GIN indexes)
+### Backend
+- **Framework**: Django + PostgreSQL with full-text search (GIN indexes)
 - **AI/ML**: OpenAI GPT + Milvus vector database for semantic search
 - **Infrastructure**: AWS Lambda (crawling), S3 (assets), Redis (caching)
 - **Integrations**: Stripe/PayPal (billing), 20+ provider APIs
+
+### Frontend
+- **Framework**: React 18+ with TypeScript
+- **State Management**: React Context + useReducer pattern
+- **Routing**: React Router with URL parameter handling
+- **HTTP Client**: Axios with real-time polling
+- **Styling**: CSS-in-JS with styled-components
+- **Build**: Create React App with Craco configuration
 
 ## 📊 Business Impact Metrics
 
@@ -73,17 +97,25 @@ Widget Embed → Guest UUID → API Endpoints → AI Processing → Response + A
 
 ## 🚀 Quick Start for Engineers
 
-1. **Read Executive Summary** - Get platform overview and key concepts
-2. **Review API Endpoints** (Section 4) - Understand helpshelf-ui integration points
-3. **Study Integration Architecture** (Section 10) - Learn iframe and direct API patterns
-4. **Explore Core Services** (Section 6) - Understand business logic and data flows
+### Backend Integration
+1. **Read Backend Executive Summary** - Get Django/PostgreSQL platform overview
+2. **Review Database Schema** (Backend Section 2) - Understand data models and relationships
+3. **Study API Endpoints** (Backend Section 4) - Learn guest user and AI search integration
+4. **Explore Core Services** (Backend Section 6) - Understand business logic and data flows
+
+### Frontend Integration  
+1. **Read Frontend Executive Summary** - Get React/TypeScript architecture overview
+2. **Study App.tsx Flow** (Frontend Section 3) - Understand URL parameters and routing
+3. **Review State Management** (Frontend Sections 5-6) - Learn reducer and context patterns
+4. **Explore API Communication** (Frontend Section 7) - Understand backend integration patterns
 
 ## 📁 File Structure
 
 ```
-helpshelf-api-md/
-├── README.md                 # This summary document
-└── helpshelf-api.md         # Complete technical documentation (534 lines)
+helpshelf-docs/
+├── README.md                        # This comprehensive overview document
+├── helpshelf-backend-api.md         # Django backend documentation (800+ lines)
+└── helpshelf-frontend-api.md        # React frontend documentation (780+ lines)
 ```
 
 ## 🔍 Navigation Tips
