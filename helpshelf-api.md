@@ -1,52 +1,94 @@
 # HelpShelf Backend Analysis - Optimized
 
-## Table of Contents
+<h2>Table of Contents</h2>
+<ol>
+  <li><a href="#executive-summary">Executive Summary</a></li>
 
-1. [Executive Summary](#executive-summary)
-2. [System Architecture](#system-architecture)
-   a. [Multi-Tenant Foundation](#multi-tenant-foundation)
-   b. [Technology Stack](#technology-stack)
-   c. [Data Flow Architecture](#data-flow-architecture)
-3. [Core Data Models](#core-data-models)
-   a. [User & Site Management](#user--site-management)
-   b. [Content & AI System](#content--ai-system)
-4. [API Endpoints for helpshelf-ui Integration](#api-endpoints-for-helpshelf-ui-integration)
-   a. [Guest User Management](#guest-user-management)
-   b. [AI Search (Primary Integration)](#ai-search-primary-integration)
-   c. [Content Access](#content-access)
-   d. [Analytics Integration](#analytics-integration)
-5. [Django Apps Overview](#django-apps-overview)
-   a. [Manage App - Site & Content Hub](#1-manage-app---site--content-hub)
-   b. [Billing App - Subscription Management](#2-billing-app---subscription-management)
-   c. [Crawler App - AWS Lambda Content Discovery](#3-crawler-app---aws-lambda-content-discovery)
-   d. [Stats App - Analytics Engine](#4-stats-app---analytics-engine)
-   e. [LLM Core App - AI Response Management](#5-llm-core-app---ai-response-management)
-6. [Core Services & Business Logic](#core-services--business-logic)
-   a. [AI Embedding Service](#ai-embedding-service-appsmanageservicesaipy)
-   b. [Payment Processing Service](#payment-processing-service-appsbillingservicespaymentpy)
-   c. [Content Extraction Service](#content-extraction-service-appscrawlerservicesextractionpy)
-   d. [Analytics Aggregation Service](#analytics-aggregation-service-appsstatsservicesaggregationpy)
-   e. [AI Response Service](#ai-response-service-appsllm_coreservicesai_servicepy)
-7. [Admin Interface Customizations](#admin-interface-customizations)
-   a. [Site Administration](#site-administration-appsmanageadminpy)
-   b. [Content Administration](#content-administration-appsmanageadminpy)
-   c. [Subscription Administration](#subscription-administration-appsbillingadminpy)
-   d. [Event Administration](#event-administration-appsstatsadminpy)
-8. [Common Patterns & Services](#common-patterns--services)
-   a. [Authentication Pattern](#authentication-pattern)
-   b. [Content Synchronization Pattern](#content-synchronization-pattern)
-   c. [Event Tracking Pattern](#event-tracking-pattern)
-9. [Security & Performance](#security--performance)
-   a. [Security Measures](#security-measures)
-   b. [Performance Optimizations](#performance-optimizations)
-10. [Integration Architecture for helpshelf-ui](#integration-architecture-for-helpshelf-ui)
-    a. [Widget Embedding Flow](#widget-embedding-flow)
-    b. [iframe Communication](#iframe-communication)
-    c. [Direct API Integration (Bypass Django Views)](#direct-api-integration-bypass-django-views)
-11. [Development Considerations](#development-considerations)
-    a. [Code Organization](#code-organization)
-    b. [Testing Strategy](#testing-strategy)
-    c. [Deployment Architecture](#deployment-architecture)
+  <li><a href="#system-architecture">System Architecture</a>
+    <ol type="1">
+      <li><a href="#multi-tenant-foundation">Multi-Tenant Foundation</a></li>
+      <li><a href="#technology-stack">Technology Stack</a></li>
+      <li><a href="#data-flow-architecture">Data Flow Architecture</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#core-data-models">Core Data Models</a>
+    <ol type="1">
+      <li><a href="#user--site-management">User &amp; Site Management</a></li>
+      <li><a href="#content--ai-system">Content &amp; AI System</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#api-endpoints-for-helpshelf-ui-integration">API Endpoints for helpshelf-ui Integration</a>
+    <ol type="1">
+      <li><a href="#guest-user-management">Guest User Management</a></li>
+      <li><a href="#ai-search-primary-integration">AI Search (Primary Integration)</a></li>
+      <li><a href="#content-access">Content Access</a></li>
+      <li><a href="#analytics-integration">Analytics Integration</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#django-apps-overview">Django Apps Overview</a>
+    <ol type="1">
+      <li><a href="#1-manage-app---site--content-hub">Manage App - Site &amp; Content Hub</a></li>
+      <li><a href="#2-billing-app---subscription-management">Billing App - Subscription Management</a></li>
+      <li><a href="#3-crawler-app---aws-lambda-content-discovery">Crawler App - AWS Lambda Content Discovery</a></li>
+      <li><a href="#4-stats-app---analytics-engine">Stats App - Analytics Engine</a></li>
+      <li><a href="#5-llm-core-app---ai-response-management">LLM Core App - AI Response Management</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#core-services--business-logic">Core Services &amp; Business Logic</a>
+    <ol type="1">
+      <li><a href="#ai-embedding-service-appsmanageservicesaipy">AI Embedding Service</a></li>
+      <li><a href="#payment-processing-service-appsbillingservicespaymentpy">Payment Processing Service</a></li>
+      <li><a href="#content-extraction-service-appscrawlerservicesextractionpy">Content Extraction Service</a></li>
+      <li><a href="#analytics-aggregation-service-appsstatsservicesaggregationpy">Analytics Aggregation Service</a></li>
+      <li><a href="#ai-response-service-appsllm_coreservicesai_servicepy">AI Response Service</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#admin-interface-customizations">Admin Interface Customizations</a>
+    <ol type="1">
+      <li><a href="#site-administration-appsmanageadminpy">Site Administration</a></li>
+      <li><a href="#content-administration-appsmanageadminpy">Content Administration</a></li>
+      <li><a href="#subscription-administration-appsbillingadminpy">Subscription Administration</a></li>
+      <li><a href="#event-administration-appsstatsadminpy">Event Administration</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#common-patterns--services">Common Patterns &amp; Services</a>
+    <ol type="1">
+      <li><a href="#authentication-pattern">Authentication Pattern</a></li>
+      <li><a href="#content-synchronization-pattern">Content Synchronization Pattern</a></li>
+      <li><a href="#event-tracking-pattern">Event Tracking Pattern</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#security--performance">Security &amp; Performance</a>
+    <ol type="1">
+      <li><a href="#security-measures">Security Measures</a></li>
+      <li><a href="#performance-optimizations">Performance Optimizations</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#integration-architecture-for-helpshelf-ui">Integration Architecture for helpshelf-ui</a>
+    <ol type="1">
+      <li><a href="#widget-embedding-flow">Widget Embedding Flow</a></li>
+      <li><a href="#iframe-communication">iframe Communication</a></li>
+      <li><a href="#direct-api-integration-bypass-django-views">Direct API Integration (Bypass Django Views)</a></li>
+    </ol>
+  </li>
+
+  <li><a href="#development-considerations">Development Considerations</a>
+    <ol type="1">
+      <li><a href="#code-organization">Code Organization</a></li>
+      <li><a href="#testing-strategy">Testing Strategy</a></li>
+      <li><a href="#deployment-architecture">Deployment Architecture</a></li>
+    </ol>
+  </li>
+</ol>
+
 
 ## Executive Summary
 
