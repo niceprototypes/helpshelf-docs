@@ -63,6 +63,24 @@ This repository contains comprehensive documentation for HelpShelf's multi-tenan
 9. **Backend Integration Patterns** - Django bypass strategy and direct service calls
 10. **Key Integration Points** - Data flow sequences and real-time synchronization
 
+## [📄 Jobs](./jobs/)
+
+### [Onboarding Integration Guide](./jobs/helpshelf-onboarding-integration.md)
+
+**Backend Implementation for React Onboarding** - Step-by-step integration guide:
+
+1. **Integration Overview** - Architecture flow and key integration points
+2. **Backend Requirements Analysis** - Frontend state and API communication patterns
+3. **Database Schema Changes** - New models for onboarding configuration
+4. **API Endpoint Implementation** - RESTful endpoints for the 3-step process
+5. **Domain Analysis Integration** - Website crawling and progress tracking
+6. **Real-time Progress System** - WebSocket/polling for live updates
+7. **Guest User Enhancement** - UUID-based session management
+8. **Analytics Integration** - Event tracking for onboarding metrics
+9. **Security Considerations** - CORS, authentication, and rate limiting
+10. **Testing Strategy** - Unit, integration, and end-to-end testing
+11. **Deployment Plan** - Phased rollout and monitoring approach
+
 ## 🔗 Key Integration Points for helpshelf-ui
 
 ### Primary API Endpoints
@@ -132,9 +150,11 @@ Widget Embed → Guest UUID → API Endpoints → AI Processing → Response + A
 
 ```
 helpshelf-docs/
-├── README.md                        # This comprehensive overview document
-├── helpshelf-backend-api.md         # Django backend documentation (800+ lines)
-└── helpshelf-frontend-api.md        # React frontend documentation (780+ lines)
+├── README.md                                 # This comprehensive overview document
+├── helpshelf-backend-api.md                  # Django backend documentation (800+ lines)
+├── helpshelf-frontend-api.md                 # React frontend documentation (780+ lines)
+└── jobs/
+    └── helpshelf-onboarding-integration.md   # Backend implementation guide for onboarding
 ```
 
 ## 🔍 Navigation Tips
