@@ -2,6 +2,25 @@
 
 Complete technical documentation for HelpShelf's full-stack platform, covering both Django backend services and React/TypeScript frontend architecture for engineering team integration.
 
+## 🏢 Business Context
+
+[HelpShelf.com](https://helpshelf.com) is a multi-tenant SaaS platform that provides AI-powered customer support solutions. The HelpShelf widget, which a customer installs on their website as a JavaScript snippet, connects to API sources and indexes the content for AI-based search. The platform currently features an existing onboarding process integrated within the Django application. However, this legacy onboarding experience has several limitations:
+
+- **Not mobile-friendly**: The current flow doesn't adapt well to mobile devices
+- **Known bugs**: Various UX issues and technical debt have accumulated
+- **Design opportunities**: The interface needs modernization to match current standards
+
+## 🎯 Onboarding Integration Project
+
+The goal of this integration project is to launch a new React-based onboarding UI (`helpshelf-ui`) that:
+
+- **Bypasses the Django layer entirely** for improved performance and flexibility
+- **Connects directly to backend services** via existing API endpoints (with minor tweaks as needed)
+- **Deploys as either**:
+  - Full-screen takeover using an iframe within the existing application
+  - New browser tab that opens independently from the main platform
+- **Provides a modern, mobile-responsive experience** that addresses all current limitations
+
 ## 📋 Overview
 
 This repository contains comprehensive documentation for HelpShelf's multi-tenant SaaS platform, including backend APIs, frontend architecture, and integration patterns between the Django backend and React/TypeScript frontend (`helpshelf-ui`).
@@ -29,7 +48,7 @@ This repository contains comprehensive documentation for HelpShelf's multi-tenan
 10. **Integration Architecture** - Widget embedding, iframe communication, direct API access
 11. **Development Considerations** - Code organization, testing, deployment
 
-### [📄 Frontend Integration Documentation](./helpshelf-frontend-api.md)
+### [📄 Frontend API Documentation](./helpshelf-frontend-api.md)
 
 **React/TypeScript Frontend Architecture** - Complete frontend integration guide:
 
