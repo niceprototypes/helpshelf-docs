@@ -63,9 +63,9 @@ This repository contains comprehensive documentation for HelpShelf's multi-tenan
 9. **Backend Integration Patterns** - Django bypass strategy and direct service calls
 10. **Key Integration Points** - Data flow sequences and real-time synchronization
 
-## [📄 Jobs](./jobs/)
+## [📖 Jobs](./jobs/)
 
-### [Onboarding Integration Guide](./jobs/helpshelf-onboarding-integration.md)
+### [📄 Onboarding Integration Guide](./jobs/helpshelf-onboarding-integration.md)
 
 **Backend Implementation for React Onboarding** - Step-by-step integration guide:
 
