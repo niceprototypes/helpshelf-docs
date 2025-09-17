@@ -29,7 +29,7 @@ The integration follows this step-by-step approach:
 
 ---
 
-## Getting Started
+## Welcome to HelpShelf
 
 Welcome aboard 👋 This document will guide you through setting up both the **React/TypeScript UI** and the **Python/Django backend**, and it will also explain what your first assignment will involve. By the end, you should have a working understanding of how the frontend and backend communicate, and how the new onboarding experience fits into the overall architecture.
 
