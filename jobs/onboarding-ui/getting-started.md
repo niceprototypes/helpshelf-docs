@@ -83,12 +83,19 @@ Our development philosophy emphasizes consistency, maintainability, and clarity:
 
 ---
 
-## Resources
+## Integration Guide Reference
 
-- Documentation for connecting the frontend to the backend: [helpshelf-docs](https://github.com/niceprototypes/helpshelf-docs)
-- Frontend repository: `<frontend-repo-url>`
-- Backend repository: `<backend-repo-url>`
+For a comprehensive technical deep-dive into the backend implementation requirements, refer to the [Integration Guide](./integration-guide.md). This document provides detailed specifications for:
+
+- Complete database schema changes and model definitions
+- Full API endpoint specifications with request/response formats
+- Domain analysis and website crawling integration details
+- Real-time progress tracking implementation patterns
+- Security configurations including CORS and authentication setup
+- Comprehensive testing strategies and deployment considerations
+
+The integration guide serves as your technical reference for understanding the complete backend architecture needed to support the new onboarding UI. While this getting-started guide focuses on practical setup and initial tasks, the integration guide contains the detailed specifications you'll need when implementing more complex features.
 
 ---
 
-Your first deliverable will be to connect the onboarding fields to the backend, using either the newly developed endpoints (once integrated into `main`) or the existing endpoints if they are sufficient. Completing this task will give you a strong understanding of the project's architecture and prepare you for more advanced feature development.
+Your first deliverable will be to connect a few of the onboarding fields to the backend, using either the newly developed endpoints (once integrated into `main`) or the existing endpoints if they are sufficient. Completing this task will give you a strong understanding of the project's architecture and prepare you for more advanced feature development.
