@@ -6,21 +6,6 @@ Complete technical documentation for HelpShelf's full-stack platform, covering b
 
 [HelpShelf.com](https://helpshelf.com) is a multi-tenant SaaS platform that provides AI-powered customer support solutions. The HelpShelf widget, which a customer installs on their website as a JavaScript snippet, connects to API sources and indexes the content for AI-based search. The platform currently features an existing onboarding process integrated within the Django application. However, this legacy onboarding experience has several limitations:
 
-- **Not mobile-friendly**: The current flow doesn't adapt well to mobile devices
-- **Known bugs**: Various UX issues and technical debt have accumulated
-- **Design opportunities**: The interface needs modernization to match current standards
-
-## 🎯 Onboarding Integration Project
-
-The goal of this integration project is to launch a new React-based onboarding UI (`helpshelf-ui`) that:
-
-- **Bypasses the Django layer entirely** for improved performance and flexibility
-- **Connects directly to backend services** via existing API endpoints (with minor tweaks as needed)
-- **Deploys as either**:
-  - Full-screen takeover using an iframe within the existing application
-  - New browser tab that opens independently from the main platform
-- **Provides a modern, mobile-responsive experience** that addresses all current limitations
-
 ## 📋 Overview
 
 This repository contains comprehensive documentation for HelpShelf's multi-tenant SaaS platform, including backend APIs, frontend architecture, and integration patterns between the Django backend and React/TypeScript frontend (`helpshelf-ui`).
@@ -32,7 +17,7 @@ This repository contains comprehensive documentation for HelpShelf's multi-tenan
 
 ## 📖 Documentation Contents
 
-### [📄 Backend API Documentation](./helpshelf-backend-api.md)
+### [📄 Backend API Documentation](./backend-api.md)
 
 **Django/Python Backend Analysis** - Comprehensive backend system documentation:
 
@@ -48,7 +33,7 @@ This repository contains comprehensive documentation for HelpShelf's multi-tenan
 10. **Integration Architecture** - Widget embedding, iframe communication, direct API access
 11. **Development Considerations** - Code organization, testing, deployment
 
-### [📄 Frontend API Documentation](./helpshelf-frontend-api.md)
+### [📄 Frontend API Documentation](./frontend-api.md)
 
 **React/TypeScript Frontend Architecture** - Complete frontend integration guide:
 
@@ -65,7 +50,16 @@ This repository contains comprehensive documentation for HelpShelf's multi-tenan
 
 ## [📖 Jobs](./jobs/)
 
-### [📄 Onboarding Integration Guide](./jobs/helpshelf-onboarding-integration.md)
+### [📄 Onboarding Integration Guide](jobs/onboarding-ui/integration-guide.md)
+
+The goal of this integration project is to launch a new React-based onboarding UI (`helpshelf-ui`) that:
+
+- **Bypasses the Django layer entirely** for improved performance and flexibility
+- **Connects directly to backend services** via existing API endpoints (with minor tweaks as needed)
+- **Deploys as either**:
+  - Full-screen takeover using an iframe within the existing application
+  - New browser tab that opens independently from the main platform
+- **Provides a modern, mobile-responsive experience** that addresses all current limitations
 
 **Backend Implementation for React Onboarding** - Step-by-step integration guide:
 
@@ -106,7 +100,7 @@ POST /api/stats/events/                              # Analytics tracking
 ```
 Widget Embed → Guest UUID → API Endpoints → AI Processing → Response + Analytics
      ↓              ↓            ↓              ↓              ↓
-   S3 Assets    Profile App   API App     LLM Core App    Stats App
+ S3 Assets      Profile App   API App     LLM Core App     Stats App
 ```
 
 ## 🔧 Technology Stack
@@ -134,13 +128,13 @@ Widget Embed → Guest UUID → API Endpoints → AI Processing → Response + A
 
 ## 🚀 Quick Start for Engineers
 
-### Backend Integration
+### Backend API Integration
 1. **Read Backend Executive Summary** - Get Django/PostgreSQL platform overview
 2. **Review Database Schema** (Backend Section 2) - Understand data models and relationships
 3. **Study API Endpoints** (Backend Section 4) - Learn guest user and AI search integration
 4. **Explore Core Services** (Backend Section 6) - Understand business logic and data flows
 
-### Frontend Integration  
+### Frontend API Integration  
 1. **Read Frontend Executive Summary** - Get React/TypeScript architecture overview
 2. **Study App.tsx Flow** (Frontend Section 3) - Understand URL parameters and routing
 3. **Review State Management** (Frontend Sections 5-6) - Learn reducer and context patterns
@@ -150,11 +144,13 @@ Widget Embed → Guest UUID → API Endpoints → AI Processing → Response + A
 
 ```
 helpshelf-docs/
-├── README.md                                 # This comprehensive overview document
-├── helpshelf-backend-api.md                  # Django backend documentation (800+ lines)
-├── helpshelf-frontend-api.md                 # React frontend documentation (780+ lines)
+├── README.md                       # This comprehensive overview document
+├── backend-api.md                  # Django backend documentation (800+ lines)
+├── frontend-api.md                 # React frontend documentation (780+ lines)
 └── jobs/
-    └── helpshelf-onboarding-integration.md   # Backend implementation guide for onboarding
+    └── onboarding-ui/              # Customer onboarding integration
+        ├── getting-started.md      # Project overview and setup guide
+        └── integration-guide.md    # Backend implementation guide for onboarding
 ```
 
 ## 🔍 Navigation Tips

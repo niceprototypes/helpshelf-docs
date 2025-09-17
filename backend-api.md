@@ -1,4 +1,4 @@
-# HelpShelf Backend API
+# HelpShelf – Backend API
 
 ## Repositories
 

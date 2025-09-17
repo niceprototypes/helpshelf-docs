@@ -1,4 +1,4 @@
-# HelpShelf Onboarding Integration Guide
+# HelpShelf Onboarding – Integration Guide
 
 ## Table of Contents
 
